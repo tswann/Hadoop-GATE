@@ -63,24 +63,24 @@
 
   <dependencies>
       <dependency>
-          <groupId>uk.ac.gate</groupId>
-          <artifactId>gate-core</artifactId>
-          <version>6.1</version>
-      </dependency>
-      <dependency>
-          <groupId>gate</groupId>
-          <artifactId>gate-compiler-jdt</artifactId>
-          <version>1.0</version>
-      </dependency>
-      <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-core</artifactId>
           <version>0.20.203.0</version>
       </dependency>
       <dependency>
-          <groupId>com.thoughtworks.xstream</groupId>
-          <artifactId>xstream</artifactId>
-          <version>1.3.1</version>
+      	<groupId>uk.ac.gate</groupId>
+      	<artifactId>gate-core</artifactId>
+      	<version>8.0</version>
+      </dependency>
+      <dependency>
+      	<groupId>uk.ac.gate</groupId>
+      	<artifactId>gate-compiler-jdt</artifactId>
+      	<version>4.3.2-P20140317-1600</version>
+      </dependency>
+      <dependency>
+      	<groupId>com.thoughtworks.xstream</groupId>
+      	<artifactId>xstream</artifactId>
+      	<version>1.4.7</version>
       </dependency>
   </dependencies>
 </project>
