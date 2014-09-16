@@ -18,7 +18,15 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,39 +49,38 @@ import java.util.UUID;
  */
 public class HadoopGATE extends Configured implements Tool {
    static public class HadoopGATEMapper extends Mapper<LongWritable, Text, LongWritable, Text> {
-      static private GATEApplication gate;
+
       private Text annotation = new Text();
+      private String line;
 
       @Override
       protected void setup(Context context) throws IOException, InterruptedException {
-         if (null == gate) {
-            Configuration configuration = context.getConfiguration();
-            Path[] localCache = DistributedCache.getLocalCacheArchives(configuration);
-            try {
-               gate = new GATEApplication(localCache[0].toString());
-            } catch (GateException e) {
-               throw new RuntimeException(e);
-            }
-         }
       }
 
       @Override
       protected void map(LongWritable offset, Text text, Context context) throws IOException, InterruptedException {
-         String xml;
+         String xml = "";
          try {
-            xml = gate.xmlAnnotation(text.toString());
-         } catch (ResourceInstantiationException e) {
-            throw new RuntimeException(e);
-         } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+            //xml = gate.xmlAnnotation(text.toString());
+        	 URL url = new URL("http://localhost:8080/base/annotation");
+        	 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        	 connection.setRequestMethod("GET");
+
+             //Get Response	
+             BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+             while ((line = rd.readLine()) != null) {
+                 xml += line;
+              }
+              rd.close();
          }
+         finally{}
+         
          annotation.set(xml);
          context.write(offset, annotation);
       }
 
       @Override
       protected void cleanup(Context context) throws IOException, InterruptedException {
-         gate.close();
       }
    }
 
@@ -87,14 +94,18 @@ public class HadoopGATE extends Configured implements Tool {
     * @param output HDFS output directory
     * @return Hadoop job to run
     * @throws IOException
+ * @throws URISyntaxException 
     */
    static public Job createJob(Configuration configuration,
                                Path localGateApp, Path hdfsGateApp,
-                               Collection<Path> inputs, Path output) throws IOException {
+                               Collection<Path> inputs, Path output) throws IOException, URISyntaxException {
       // Put the GATE application into the distributed cache.
       FileSystem fs = FileSystem.get(configuration);
       fs.copyFromLocalFile(localGateApp, hdfsGateApp);
-      DistributedCache.addCacheArchive(hdfsGateApp.toUri(), configuration);
+      
+      //DistributedCache.addCacheArchive(hdfsGateApp.toUri(), configuration);
+      DistributedCache.createSymlink(configuration);
+      DistributedCache.addCacheArchive(new URI(hdfsGateApp+"#gateApp"), configuration);
 
       Job job = new Job(configuration, "GATE " + output);
       for (Path input : inputs)

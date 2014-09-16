@@ -57,7 +57,7 @@ public class GATEApplication {
    @SuppressWarnings({"unchecked"}) // Needed for corpus.add(document)
    private Document annotateDocument(Document document) throws ResourceInstantiationException, ExecutionException {
       corpus.add(document);
-      application.execute();
+      //application.execute();
       corpus.clear();
       return document;
    }
